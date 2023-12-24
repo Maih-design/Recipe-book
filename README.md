@@ -26,6 +26,7 @@ tables:
 	- id pk
 	- recipe-name 
 	- category
+	- img
 	- user-id - fk
 	- ingrediants
 	- directions
