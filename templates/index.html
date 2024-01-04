@@ -1,11 +1,55 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recipe Book</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <title>TasteHarbor Recipe Book</title>
 </head>
 <body>
-    this is my recipe book
+    <div id="welcome">
+        <container>
+            <h1>Welcome to TasteHarbor!</h1>
+            <h2>Unleash Your Culinary Creativity!</h2>
+        </container>
+        <container>
+            <p>Welcome to TasteHarbor, the ultimate destination for food enthusiasts and home chefs. Whether you're a seasoned cook or just starting your culinary journey, our community is here to inspire, share, and savor the joy of cooking.
+            </p>
+        </container>
+    </div>
+    <div id="features">
+        <container>
+            <h3>What Awaits You?</h3>
+            <h4>Create Your Recipe Collection</h4>
+            <p>Have a family recipe or a culinary masterpiece you're proud of? Add it to your personalized recipe collection and let the world savor your creations.</p>
+            <h4>Discover Diverse Recipes</h4>
+            <p>Explore a vast library of recipes contributed by fellow users. From cozy comfort food to exotic international dishes, find the perfect recipe for any mood or occasion.</p>
+            <h4>Connect with the Community</h4>
+            <p>Engage with a community of passionate cooks. Share cooking tips, ask questions, and get inspired by the creativity of your fellow chefs.</p>
+            <h4>Rate and Comment</h4>
+            <p>Love a recipe? Let the chef know! Rate and leave thoughtful comments to show your appreciation and share your experience.</p>
+            <h4>Build Your Favorites List</h4>
+            <p>Save your go-to recipes in one place. Create a favorites list to easily access and organize the dishes you love.</p>
+        </container>
+    </div>
+    <div id="sign">
+        <container>
+            <h3>Ready to Join the Culinary Adventure?</h3>
+            <h4>Sign Up Today</h4>
+            <p> Unlock the full potential of [Your Recipe Hub]. Sign up for free to start adding your own recipes, connecting with the community, and building your culinary legacy.</p>
+            <h4>Stay Updated</h4>
+            <p>Subscribe to our newsletter for weekly recipe highlights, cooking tips, and exclusive community updates. Don't miss a single culinary delight!</p>
+            <p>Ready to embark on a delicious journey? Let's get cooking!</p>
+            <div>
+                <a url="">Join Now</a>
+                <a url="">Explore Recipes</a>
+            </div>
+        </container>
+    </div>
+
+    {% include 'partials/_footer.html' %}
+    
 </body>
 </html>
