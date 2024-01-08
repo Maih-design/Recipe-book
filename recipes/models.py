@@ -10,11 +10,18 @@ class Recipe(models.Model):
     ingrediants = models.TextField(db_index=True)
     directions = models.TextField()
     public = models.BooleanField(default=True)
-    
-class Rating(models.Model):
+
+class UserRatings(models.Model):
     rating_options = [(1,'1'), (2,'2'), (3,'3'), (4,'4'), (5,'5')]
+    userId = models.ForeignKey(User, on_delete=models.CASCADE)
     recipeId = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     rating = models.IntegerField(choices=rating_options)
+    class Meta:
+        unique_together = (('userId', 'recipeId'),)
+    
+class Rating(models.Model):
+    recipeId = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    rating = models.IntegerField()
     num_of_rates = models.IntegerField()
     
 class Comment(models.Model):
