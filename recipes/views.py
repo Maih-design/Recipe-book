@@ -84,7 +84,7 @@ def recipesview(request):
     serialized_items = RecipesSerializer(items, many=True)
     return Response(serialized_items.data)
 
-@api_view('GET', 'POST', 'PATCH')
+@api_view('GET', 'PATCH')
 @permission_classes([IsAuthenticated])
 def rating(request, recipe_id):
     try:
@@ -97,7 +97,7 @@ def rating(request, recipe_id):
             return Response(serialized_rating.data)
         else:
             return Response({"message":"This recipe is not rated by any user yet"})
-    if request.method == 'POST':
+    if request.method == 'PATCH':
         if rating:
             serialized_rating = RatingSerializer(rating, data=request.data, partial=True)
             if serialized_rating.is_valid():
