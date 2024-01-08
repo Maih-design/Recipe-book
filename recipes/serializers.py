@@ -9,16 +9,16 @@ class RecipesSerializer(serializers.Serializer):
         fields = "__all__"
     
 class RatingSerializer(serializers.Serializer):
-    rating = serializers.SerializerMethodField(method_name='calculate_rating')
     class Meta:
         model = Rating
         fields = "__all__"
-    def calculate_rating(self, obj):
-        current_rating = obj.rating
-        num_of_rates = obj.num_of_rates
-        new_rating = self.context['data'].get('rating', 0)
-        rating = ((current_rating * num_of_rates) + new_rating)/(num_of_rates + 1)
+    def calculate_rating(self, current_rating, new_rating, num_of_rates):
+        rating = ((current_rating * num_of_rates) + new_rating)/(num_of_rates)
         return rating
+    def pre_save(self, obj):
+        obj.num_of_rates += 1
+        obj.rating = self.calculate_rating(obj.rating, request.data['rating'], obj.num_of_rates)                          , 
+        return obj
 
 class CommentSerializer(serializers.Serializer):
     model = Comment
