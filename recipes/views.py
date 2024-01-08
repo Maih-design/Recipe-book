@@ -86,20 +86,29 @@ def recipesview(request):
 
 @api_view('GET', 'POST', 'PATCH')
 @permission_classes([IsAuthenticated])
-def rating(request):
-    recipe_id = request.query_params.get('recipe-id')
+def rating(request, recipe_id):
+    try:
+        rating = Rating.objects.get(recipe_id=recipe_id)
+    except rating.DoesNotExist:
+        rating = None
     if request.method == 'GET':
-        recipe_rating = Rating.objects.filter(recipeId=recipe_id)
-        if recipe_rating:
-            serialiced_rating = RatingSerializer(recipe_rating)
-            return Response(serialiced_rating.data)
+        if rating:
+            serialized_rating = RatingSerializer(rating)
+            return Response(serialized_rating.data)
         else:
             return Response({"message":"This recipe is not rated by any user yet"})
     if request.method == 'POST':
-        
-        recipe_rating = {
-            'recipeId': recipe_id,
-            'rating':,
-            'num_of_rates': 
-        }
-        serialized_rating = RatingSerializer(data=)
+        if rating:
+            serialized_rating = RatingSerializer(rating, data=request.data, partial=True)
+            if serialized_rating.is_valid():
+                serialized_rating.save()
+                return Response(serialized_rating.data)
+            else:
+                return Response(serialized_rating.errors, status = status.HTTP_400_BAD_REQUEST)
+        else:
+            serialized_rating = RatingSerializer(data=request.data)
+            if serialized_rating.is_valid():
+                serialized_rating.save()
+                return Response(serialized_rating.data)
+            else:
+                return Response(serialized_rating.errors, status = status.HTTP_400_BAD_REQUEST)
