@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Recipe, Rating, Comment, Favorate
+from .models import Recipe, Rating, Comment, Favorate, UserRatings
 from django.contrib.auth.models import User 
 
 class RecipesSerializer(serializers.Serializer):
@@ -8,9 +8,9 @@ class RecipesSerializer(serializers.Serializer):
         model = Recipe
         fields = "__all__"
     
-class RatingSerializer(serializers.Serializer):
+class UserRatingSerializer(serializers.Serializer):
     class Meta:
-        model = Rating
+        model = UserRatings
         fields = "__all__"
     def calculate_rating(self, current_rating, new_rating, num_of_rates):
         rating = ((current_rating * num_of_rates) + new_rating)/(num_of_rates)
@@ -19,6 +19,11 @@ class RatingSerializer(serializers.Serializer):
         obj.num_of_rates += 1
         obj.rating = self.calculate_rating(obj.rating, request.data['rating'], obj.num_of_rates)                          , 
         return obj
+    
+class RatingSerializer(serializers.Serializer):
+    class Meta:
+        model = Rating
+        fields = "__all__"
 
 class CommentSerializer(serializers.Serializer):
     model = Comment

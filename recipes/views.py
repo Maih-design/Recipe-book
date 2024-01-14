@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics, viewsets, status
-from .models import Recipe, Favorate, Rating, Comment
-from .serializers import RecipesSerializer, RatingSerializer, CommentSerializer, FavorateSerializer
+from .models import Recipe, Favorate, Rating, Comment, UserRatings, create_or_update_rating
+from .serializers import RecipesSerializer, UserRatingSerializer, CommentSerializer, FavorateSerializer, RatingSerializer
 from django.contrib.auth.models import User, Group
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -43,7 +43,7 @@ class MyRecipesView(viewsets.ViewSet):
         item = get_object_or_404(Recipe, id=id)
         serialized_item = RecipesSerializer(item)
         if serialized_item.user == request.user:
-            serialized_item = RatingSerializer(item, data=request.data)
+            serialized_item = RecipesSerializer(item, data=request.data)
             serialized_item.is_valid(raise_exception=True)
             serialized_item.save()
             return Response(serialized_item.data, status.HTTP_205_RESET_CONTENT)
@@ -53,7 +53,7 @@ class MyRecipesView(viewsets.ViewSet):
         item = get_object_or_404(Recipe, id=id)
         serialized_item = RecipesSerializer(item)
         if serialized_item.user == request.user:
-            serialized_item = RatingSerializer(item, data=request.data)
+            serialized_item = RecipesSerializer(item, data=request.data)
             serialized_item.is_valid(raise_exception=True)
             serialized_item.save()
             return Response(serialized_item.data, status.HTTP_206_PARTIAL_CONTENT)
@@ -113,32 +113,91 @@ def recipesview(request):
 #             else:
 #                 return Response(serialized_rating.errors, status = status.HTTP_400_BAD_REQUEST)
 
-@api_view('POST')
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ratingview(request, recipeId):
+    user_id = request.user.id
+    rating = request.query_params.get('rating')
     if request.method == 'POST':
-        serializer = UserRatingsSerializser(data=request.data)
-        if serializer.is_valid:
-            serializer.save()
-            try:
-                rating = Rating.objects.get(recipeId=serializer.data['recipeId'])
-            except rating.DoesNotExist:
-                rating = None
-            if rating:
-                serialized_rating = RatingSerializer(rating)
-                if serialized_rating.is_valid():
-                    serialized_rating.save()
-                    return Response(serialized_rating.data)
-                else:
-                    return Response(serialized_rating.errors, status = status.HTTP_400_BAD_REQUEST)
+        if not rating:
+            item = UserRatings.objects.get(userId=user_id, recipeId=recipeId)
+            if item:
+                serializer = UserRatingSerializer(item)
+                return Response(serializer.data)
             else:
-                data = {
-                    'recipeId': RatingSerializer,
-                    'num_of_rates': 0
-                }
-                serialized_rating = RatingSerializer(data=data)
-                if serialized_rating.is_valid:
-                    serialized_rating.save()
-                    return Response(serialized_rating.data)
+                return Response({"message":"You didnt rate this recipe yet"})
+        else:
+            item = UserRatings.objects.get(userId=user_id, recipeId=recipeId)
+            if item:
+                serializer = UserRatingSerializer(item, rating=rating)
+                if serializer.is_valid():
+                    serializer.save()
+                    create_or_update_rating(recipeId)
+                    recipe_rating = Rating.objects.get(recipeId=recipeId)
+                    recipe_rating_serializer = RatingSerializer(recipe_rating)
+                    return Response(recipe_rating_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
                 else:
                     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+            else:
+                serializer= UserRatingSerializer(data={'rating': rating, 'recipeId': recipeId, 'userId': user_id})
+                if serializer.is_valid():
+                    serializer.save()
+                    create_or_update_rating(recipeId)
+                    recipe_rating = Rating.objects.get(recipeId=recipeId)
+                    recipe_rating_serializer = RatingSerializer(recipe_rating)
+                    return Response(recipe_rating_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+                else:
+                    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST) 
+        # serializer = UserRatingsSerializser(data=request.data)
+        # if serializer.is_valid:
+        #     serializer.save()
+        #     try:
+        #         rating = Rating.objects.get(recipeId=serializer.data['recipeId'])
+        #     except rating.DoesNotExist:
+        #         rating = None
+        #     if rating:
+        #         serialized_rating = RatingSerializer(rating)
+        #         if serialized_rating.is_valid():
+        #             serialized_rating.save()
+        #             return Response(serialized_rating.data)
+        #         else:
+        #             return Response(serialized_rating.errors, status = status.HTTP_400_BAD_REQUEST)
+        #     else:
+        #         data = {
+        #             'recipeId': RatingSerializer,
+        #             'num_of_rates': 0
+        #         }
+        #         serialized_rating = RatingSerializer(data=data)
+        #         if serialized_rating.is_valid:
+        #             serialized_rating.save()
+        #             return Response(serialized_rating.data)
+        #         else:
+        #             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def fav(request):
+    if request.method == 'GET':
+        favs = Favorate.objects.filter(userId=request.user.id, many=True)
+        if favs:
+            serializer = FavorateSerializer(favs)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"message":"Your favorates list is empty."})
+        
+class FavorateView(viewsets.ViewSet):
+    authentication_classes= [IsAuthenticated]
+    def list(self,request):
+        favs = Favorate.objects.filter(userId=request.user.id, many=True)
+        if favs:
+            serializer = FavorateSerializer(favs)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"message":"Your favorates list is empty."})
+    def create(self, request, recipeId):
+        serialiver = FavorateSerializer(data={'userId': request.user.id, 'recipeId': recipeId})
+        if serialiver.is_valid():
+            serialiver.save()
+            return Response(serialiver.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serialiver.errors, status=status.HTTP_400_BAD_REQUEST)

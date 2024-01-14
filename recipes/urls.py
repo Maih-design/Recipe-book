@@ -14,4 +14,7 @@ urlpatterns = [
         'delete': 'destroy'
     })),
     path('recipes', views.recipesview),
+    path('rating/<int:recipeId>', views.ratingview, name='rating'),
+    path('favorates', views.FavorateView.as_view({'get': 'list'})),
+    path('favorates/<int:recipeId>',views.FavorateView.as_view({'post': 'create'})),
 ]
